@@ -4,9 +4,11 @@ import re
 from openai import OpenAI
 
 pc = Pinecone(api_key="Your Pinecone API key goes here")
-index = pc.Index("Your Pinecone Index Name goes here")
+index = pc.Index("Your Pinecone index name goes here")
 
-client = OpenAI()
+StartPrompt = "You need to categorize the user input from natural language into 3 different types based on input content: Match, Add. Match category means user want to match the content with content in the database. Add means user want to add content to the database. Your output content should strictly in the following format Match/Add: Summarized Content that user want to match or add. You should not include extra words in summarized content."
+
+client = OpenAI(api_key='Your OpenAI API key goes here')
 
 def get_embedding(text):
     text = text.replace("\n", " ")
@@ -26,6 +28,35 @@ def QueryDatabase(text):
     )
     return result['matches'][0]['id']
 
+def Processing(text):
+    messages = [
+        {"role": "system", "content": "You need to categorize the user input from natural language into 3 different types based on input content: Match, Add. Match category means user want to match the content with content in the database. Add means user want to add content to the database. Your output content should strictly in the following format Match/Add: Summarized Content that user want to match or add. You should not include extra words in summarized content."},
+        {"role": "user", "content": text}
+    ]
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=messages, 
+        temperature=2
+    )
+
+    returned_message = response.choices[0].message.content
+    print(returned_message)
+    if ": " not in returned_message:
+        return returned_message
+    
+    separations = returned_message.split(": ")
+    content = ""
+    i = 1
+    while i < len(separations):
+        content += separations[i]
+        i += 1
+
+    if separations[0] == "Add" or separations[0] == 'add':
+        AddToDatabase(content)
+        return content + ' has been added to database'
+    else:
+        return QueryDatabase(content)
+
 st.title("Content Searching Tool")
 
 if "messages" not in st.session_state:
@@ -36,25 +67,15 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
     
 if prompt:= st.chat_input("Input text here"):
-    if re.search("^\[Add to Database\]: ", prompt):
-        print("add")
     with st.chat_message("user"):
         st.markdown(prompt)
-    txt = prompt
-    if re.search("^\[Add to Database\]: ", prompt):
-        txt = re.sub('^\[Add to Database\]: ', '', txt)
-        AddToDatabase(txt)
     st.session_state.messages.append({"role": "user", "content":prompt})
 
 
 if prompt == None:
     response = prompt
-else:    
-    if not re.search("^\[Add to Database\]: ", prompt):
-        response = QueryDatabase(prompt)
-    else:
-        prompt = re.sub('^\[Add to Database\]: ', '', prompt)
-        response = prompt + ' has been added to database'
+else:
+    response = Processing(prompt)
 
 with st.chat_message("assistant"):
     st.markdown(response)
