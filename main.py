@@ -6,7 +6,6 @@ from openai import OpenAI
 pc = Pinecone(api_key="Your Pinecone API key goes here")
 index = pc.Index("Your Pinecone index name goes here")
 
-StartPrompt = "You need to categorize the user input from natural language into 3 different types based on input content: Match, Add. Match category means user want to match the content with content in the database. Add means user want to add content to the database. Your output content should strictly in the following format Match/Add: Summarized Content that user want to match or add. You should not include extra words in summarized content."
 
 client = OpenAI(api_key='Your OpenAI API key goes here')
 
@@ -30,11 +29,11 @@ def QueryDatabase(text):
 
 def Processing(text):
     messages = [
-        {"role": "system", "content": "You need to categorize the user input from natural language into 3 different types based on input content: Match, Add. Match category means user want to match the content with content in the database. Add means user want to add content to the database. Your output content should strictly in the following format Match/Add: Summarized Content that user want to match or add. You should not include extra words in summarized content."},
+        {"role": "system", "content": "You need to categorize the user input from natural language into 2 different types based on input content: Match, Add. Match category means user want to search or match the content with content in the database. Add means user want to add content to the database. Your output content should strictly in the following format Match/Add: Summarized Content that user want to match or add. You should not include extra words in summarized content."},
         {"role": "user", "content": text}
     ]
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=messages, 
         temperature=2
     )
