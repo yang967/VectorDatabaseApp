@@ -1,5 +1,5 @@
 # Setup
-Put your **Pinecone API key**, your **Pincone index name**, and your **OpenAIAPI key** in the marked area in **main.py**
+Put your **Pinecone API key**, your **Pincone index name**, and your **OpenAI API key** in the marked area in **main.py**
 
 The app is based on **text-embedding-ada-002**
 
